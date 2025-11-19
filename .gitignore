@@ -72,3 +72,6 @@ build/
 # Streamlit cache
 .streamlit_cache/
 logs/
+
+# Node.js dependencies
+node_modules/
