@@ -470,6 +470,14 @@ function App() {
                       <div
                         className="result-card"
                         onClick={() => setVideoPreview({ visible: true, url: url, prompt: task.prompt })}
+                        onMouseEnter={(e) => {
+                          const video = e.currentTarget.querySelector('video');
+                          if (video) video.pause();
+                        }}
+                        onMouseLeave={(e) => {
+                          const video = e.currentTarget.querySelector('video');
+                          if (video) video.play().catch(() => { });
+                        }}
                       >
                         {/* Video Badge - Distinguish from images */}
                         <div
@@ -526,6 +534,10 @@ function App() {
                         </div>
                         <video
                           src={url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
                           style={{
                             width: '100%',
                             height: '100%',
@@ -534,26 +546,6 @@ function App() {
                             pointerEvents: 'none',
                           }}
                         />
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'rgba(0, 0, 0, 0.6)',
-                            backdropFilter: 'blur(4px)',
-                            color: 'white',
-                            padding: '12px 24px',
-                            borderRadius: 'var(--radius-full)',
-                            fontSize: '14px',
-                            opacity: 0,
-                            transition: 'opacity 0.2s ease',
-                            pointerEvents: 'none',
-                          }}
-                          className="video-play-hint"
-                        >
-                          点击播放
-                        </div>
                         {task.prompt && (
                           <div className="prompt-tooltip">
                             {task.prompt}

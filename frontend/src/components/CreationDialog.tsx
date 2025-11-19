@@ -35,7 +35,9 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
   const [taskType, setTaskType] = useState<TaskType>('text_to_image');
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // 监听表单值变化以更新UI
   const size = Form.useWatch('size', form);
@@ -73,25 +75,96 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
 
   // 处理图片上传
   const handleUpload = async (file: File) => {
+    // 自动切换到图生视频模式
+    if (mediaMode !== 'image_to_video') {
+      handleModeChange('image_to_video');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
     try {
+      setUploading(true);
       const res = await generationAPI.uploadImage(formData);
       setImageUrl(res.url);
       form.setFieldValue('image_url', res.url);
-
-      if (mediaMode === 'video' || mediaMode === 'image_to_video') {
-        setTaskType('image_to_video');
-        form.setFieldValue('model', 'wan2.5-i2v-preview');
-      }
-
       message.success('图片上传成功');
     } catch (error) {
+      console.error('Upload error:', error);
       message.error('图片上传失败');
+    } finally {
+      setUploading(false);
     }
 
     return false;
+  };
+
+  // 全局拖拽处理
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 只有当离开当前元素（overlay）时才取消
+    if (e.currentTarget === e.target) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleGlobalDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    // 1. 处理文件拖拽
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        // 立即切换模式
+        if (mediaMode !== 'image_to_video') {
+          handleModeChange('image_to_video');
+        }
+        handleUpload(file);
+      }
+      return;
+    }
+
+    // 2. 处理网页图片拖拽
+    const imageUrl = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (imageUrl) {
+      // 立即切换模式，提供即时反馈
+      if (mediaMode !== 'image_to_video') {
+        handleModeChange('image_to_video');
+      }
+
+      // 宽松的检查，支持 http, data:image, 和相对路径 (/)
+      if (imageUrl.startsWith('http') || imageUrl.startsWith('data:image') || imageUrl.startsWith('/')) {
+        const hideLoading = message.loading('正在处理图片...', 0);
+        try {
+          // 尝试获取图片内容并上传
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          if (blob.type.startsWith('image/')) {
+            const file = new File([blob], "dropped_image.png", { type: blob.type });
+            hideLoading();
+            handleUpload(file);
+            return;
+          }
+        } catch (error) {
+          console.warn('Failed to fetch dropped image, using URL directly:', error);
+        }
+
+        // 如果获取失败或不是图片，尝试直接使用URL
+        hideLoading();
+        setImageUrl(imageUrl);
+        form.setFieldValue('image_url', imageUrl);
+        message.success('图片已添加');
+      }
+    }
   };
 
   // 提交创作任务
@@ -219,7 +292,42 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="creation-dialog">
+    <div
+      className="creation-dialog"
+      onDragEnter={handleDragEnter}
+    >
+      {/* 拖拽覆盖层 */}
+      {isDragging && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px dashed var(--color-primary)',
+            borderRadius: 'var(--radius-xl)',
+            color: 'var(--color-primary)',
+            pointerEvents: 'all',
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onDragLeave={handleDragLeave}
+          onDrop={handleGlobalDrop}
+        >
+          <UploadOutlined style={{ fontSize: '48px', marginBottom: '16px' }} />
+          <div style={{ fontSize: '18px', fontWeight: 500 }}>释放图片以生成视频</div>
+        </div>
+      )}
       <Form
         form={form}
         onFinish={handleSubmit}
@@ -237,46 +345,11 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
         <div className="dialog-header">
           <div className="dialog-tabs-container">
             <div className="dialog-tabs">
-              {/* 图片上传按钮 - 仅图生视频模式显示 */}
-              {mediaMode === 'image_to_video' && (
+              {/* 图片上传按钮 - 仅图生视频模式显示，或者正在上传/已有图片时显示 */}
+              {(mediaMode === 'image_to_video' || uploading || imageUrl) && (
                 <Form.Item name="image_upload" noStyle>
                   <Tooltip title="上传图片" placement="right">
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onDrop={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        // 1. Handle files (external drag)
-                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                          const file = e.dataTransfer.files[0];
-                          if (file.type.startsWith('image/')) {
-                            handleUpload(file);
-                          }
-                          return;
-                        }
-
-                        // 2. Handle internal images (drag from page)
-                        const imageUrl = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-                        if (imageUrl) {
-                          try {
-                            // If it's a blob URL or external URL, try to fetch it
-                            const response = await fetch(imageUrl);
-                            const blob = await response.blob();
-                            const file = new File([blob], "dropped_image.png", { type: blob.type });
-                            handleUpload(file);
-                          } catch (error) {
-                            console.error('Failed to process dropped image:', error);
-                            // If fetch fails (e.g. CORS), try to use the URL directly if it's a valid image URL
-                            // But our backend expects a file upload, so we might be stuck if we can't fetch it.
-                            // For generated images (same domain), fetch should work.
-                          }
-                        }
-                      }}
-                    >
+                    <div>
                       <Upload.Dragger
                         accept="image/*"
                         beforeUpload={handleUpload as any}
@@ -309,7 +382,15 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
                             cursor: 'pointer',
                           }}
                         >
-                          {imageUrl ? (
+                          {uploading ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 1s linear infinite' }}>
+                                <circle cx="12" cy="12" r="10" stroke="var(--color-primary)" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" opacity="0.3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" />
+                              </svg>
+                              <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>上传中...</span>
+                            </div>
+                          ) : imageUrl ? (
                             <>
                               <img
                                 src={imageUrl}
@@ -431,6 +512,11 @@ export const CreationDialog: React.FC<CreationDialogProps> = ({ onSubmit }) => {
                 className="clear-input-btn"
                 onClick={() => {
                   form.setFieldValue('prompt', '');
+                  // 如果在图生视频模式，也清空图片
+                  if (mediaMode === 'image_to_video') {
+                    setImageUrl('');
+                    form.setFieldValue('image_url', '');
+                  }
                   message.success('已清空输入');
                 }}
                 aria-label="Clear input"
